@@ -165,7 +165,11 @@
         <div class="chart-container"><canvas id="graficoPedidos"></canvas></div>
         <div class="chart-container"><canvas id="graficoPagamentos"></canvas></div>
     </div>
-
+    <div class="card-stat" style="border-bottom: 5px solid var(--info);">
+        <i class="fas fa-motorcycle" style="color: var(--info)"></i>
+        <p>Total Entregas</p>
+        <h3 id="total-entregas-contador">0</h3>
+    </div>
     <div class="chart-container" style="margin: 20px auto; max-width: 1200px;">
         <h3 style="text-align: center; color: var(--dark); border-bottom: 2px solid #eee; padding-bottom: 10px;">
             <i class="fas fa-boxes"></i> Resumo de Ingredientes Gastos
@@ -226,7 +230,6 @@
                 const agora = new Date();
                 let limiteMs = 0;
 
-                // Inicializa sempre zerado para o novo cálculo
                 let resumoIngredientes = { pao: 0, hamburguer: 0, queijo: 0, bacon: 0, abacaxi: 0, banana: 0, cheddar: 0, batata: 0 };
 
                 if (filtro === 'hoje') limiteMs = new Date().setHours(0, 0, 0, 0);
@@ -241,7 +244,9 @@
                 const q = query(collection(db, "pedidos"), where("status", "in", ["Pronto", "Finalizado", "Entregue", "Concluído", "A Caminho", "Saiu para entrega"]));
                 const querySnapshot = await getDocs(q);
 
+                // --- VARIÁVEIS DE CÁLCULO ---
                 let bruto = 0, taxas = 0, totalInsumosFin = 0, totalPedidos = 0;
+                let qtdEntregas = 0; // <--- NOVA VARIÁVEL PARA CONTAR ENTREGAS
                 let somaTempoLanches = 0, contLanches = 0, somaTempoEspetos = 0, contEspetos = 0;
                 let metodosCount = { pix: 0, cartao: 0, dinheiro: 0 };
 
@@ -249,11 +254,16 @@
                     const p = doc.data();
                     const ts = Number(p.timestamp);
 
-                    // Filtro de Data
                     if (filtro !== 'tudo' && ts < limiteMs) return;
                     if (filtro === 'ontem' && ts > (limiteMs + 86400000)) return;
 
                     totalPedidos++;
+
+                    // --- LÓGICA DE CONTAGEM DE ENTREGA ---
+                    if (p.tipo_local && p.tipo_local.toLowerCase() === "entrega") {
+                        qtdEntregas++;
+                    }
+
                     const v = parseFloat(p.total) || 0;
                     bruto += v;
 
@@ -267,7 +277,7 @@
                     somarCusto(p.espetos); somarCusto(p.lanches); somarCusto(p.refrigerantes);
                     if (p.jantinhas?.quantidade) totalInsumosFin += 5.90 * Number(p.jantinhas.quantidade);
 
-                    // 2. INGREDIENTES (FICHA) - CORREÇÃO DE TRIM E SOMA
+                    // 2. INGREDIENTES (FICHA)
                     if (p.lanches) {
                         Object.entries(p.lanches).forEach(([nomeLanche, qtdPedido]) => {
                             const receita = FICHA_TECNICA[nomeLanche.trim()];
@@ -289,7 +299,6 @@
                         if (diff > 0.1 && diff < 180) {
                             const temLanche = p.lanches && Object.keys(p.lanches).length > 0;
                             const temEspeto = (p.espetos && Object.keys(p.espetos).length > 0) || (p.jantinhas?.quantidade > 0);
-
                             if (temLanche) { somaTempoLanches += diff; contLanches++; }
                             if (temEspeto) { somaTempoEspetos += diff; contEspetos++; }
                         }
@@ -309,12 +318,19 @@
                     }
                 });
 
-                // ATUALIZA UI
+                // --- ATUALIZAÇÃO DA INTERFACE ---
                 document.getElementById('total-pedidos').innerText = totalPedidos;
+                document.getElementById('total-entregas-contador').innerText = qtdEntregas; // <--- MOSTRA NOVO CARD
+
                 document.getElementById('total-bruto').innerText = bruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 document.getElementById('total-insumos').innerText = "- " + totalInsumosFin.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 document.getElementById('total-taxas').innerText = "- " + taxas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                document.getElementById('total-liquido').innerText = (bruto - totalInsumosFin - taxas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                // Cálculo do Lucro considerando a Diária do Entregador apenas se houver entregas
+                const custoEntregador = qtdEntregas > 0 ? DIARIA_ENTREGADOR : 0;
+                const lucroFinal = bruto - totalInsumosFin - taxas - custoEntregador;
+
+                document.getElementById('total-liquido').innerText = lucroFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
                 document.getElementById('tempo-espetos').innerText = contEspetos > 0 ? Math.round(somaTempoEspetos / contEspetos) + ' min' : '-- min';
                 document.getElementById('tempo-lanches').innerText = contLanches > 0 ? Math.round(somaTempoLanches / contLanches) + ' min' : '-- min';
@@ -324,18 +340,17 @@
                 const htmlInsumos = Object.entries(resumoIngredientes)
                     .filter(([_, total]) => total > 0)
                     .map(([nome, total]) => `
-                    <div style="background:#f8f9fa; padding:10px; border-radius:8px; text-align:center; border:1px solid #eee;">
-                        <p style="font-size:0.7rem; color:#888; margin:0; text-transform:uppercase;">${nome}</p>
-                        <h4 style="margin:5px 0 0; color:#2c3e50;">${total}</h4>
-                    </div>
-                `).join('');
+            <div style="background:#f8f9fa; padding:10px; border-radius:8px; text-align:center; border:1px solid #eee;">
+                <p style="font-size:0.7rem; color:#888; margin:0; text-transform:uppercase;">${nome}</p>
+                <h4 style="margin:5px 0 0; color:#2c3e50;">${total}</h4>
+            </div>
+        `).join('');
 
                 listaInsumosContainer.innerHTML = htmlInsumos || '<p style="font-size:0.8rem; color:#999;">Nenhum gasto registrado.</p>';
 
                 renderizarGraficos(contEspetos, contLanches, metodosCount);
             } catch (e) { console.error("Erro ao carregar dados ADM:", e); }
         }
-
         function renderizarGraficos(e, l, m) {
             const cfg = { responsive: true, maintainAspectRatio: false };
             if (window.c1) window.c1.destroy();
