@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - F&B Burguer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #121212;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #28a745;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            text-align: left;
+        }
+
+        .baixo {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        .btn-ajuste {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+
+        .btn-ajuste:hover {
+            background: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="gerenciamento.html" style="color: #ff9800; text-decoration: none;">⬅️ Voltar ao Gerenciamento</a>
+        <div class="card" style="margin-top: 20px;">
+            <h2>📦 Controle de Estoque</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qtd</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-estoque"></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom: 20px; border-left: 5px solid #ff9800;">
+        <h3>➕ Novo Item</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="novo-item-nome" placeholder="Ex: Alface" style="flex: 1; padding: 10px;">
+            <input type="number" id="novo-item-qtd" placeholder="Qtd" style="width: 80px; padding: 10px;">
+            <button onclick="cadastrarNovoItem()"
+                style="padding: 10px; background: #ff9800; border: none; cursor: pointer; font-weight: bold;">ADICIONAR</button>
+        </div>
+    </div>
+    <script type="module" src="./estoque.js"></script>
+</body>
+
+</html>

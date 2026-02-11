@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🔥 Cozinha Real-Time - F&B Burguer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --pendente: #ff9800;
+            --preparando: #2196f3;
+            --pronto: #4caf50;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            color: var(--pendente);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        /* Botão de Som */
+        #ativar-som {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 25px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Resumo no Topo */
+        #totalizadores-itens {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            
+        }
+
+        .resumo-tag {
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border-bottom: 3px solid var(--pendente);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* Grid de Cards */
+        #lista-pedidos-cozinha {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* Estilo do Card de Pedido */
+        .pedido-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #333;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pedido-header {
+            padding: 15px;
+            background: #252525;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .pedido-id {
+            font-weight: bold;
+            color: var(--pendente);
+        }
+
+        .pedido-canal {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .pedido-corpo {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .cliente-nome {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: block;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .lista-itens {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-linha {
+            font-size: 1.3rem;
+            padding: 8px 0;
+            border-bottom: 1px dashed #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .item-linha i {
+            margin-right: 10px;
+            color: #888;
+        }
+
+        .observacao-box {
+            margin-top: 15px;
+            padding: 10px;
+            background: #332a11;
+            border-radius: 8px;
+            color: #ffeb3b;
+            font-weight: bold;
+            border-left: 5px solid #ffeb3b;
+        }
+
+        /* Botões de Ação */
+        .pedido-footer {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-cozinha {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .btn-preparar {
+            background: var(--preparando);
+            color: white;
+        }
+
+        .btn-finalizar {
+            background: var(--pronto);
+            color: white;
+        }
+
+        /* Status Cores */
+        .status-Pendente {
+            border-color: var(--pendente);
+        }
+
+        .status-Preparando {
+            border-color: var(--preparando);
+        }
+
+        @media (max-width: 480px) {
+            #lista-pedidos-cozinha {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="ativar-som" onclick="liberarSom()">
+        <i class="fas fa-volume-mute"></i> Ativar Som
+    </button>
+
+    <audio id="som-pedido" src="alerta.mp3" preload="auto"></audio>
+
+    <h1><i class="fas fa-fire"></i> Cozinha F&B</h1>
+
+    <div id="totalizadores-itens">
+        <div class="resumo-tag">Aguardando novos pedidos...</div>
+    </div>
+
+    <div id="lista-pedidos-cozinha">
+    </div>
+
+    <script>
+        // Função para permitir o som (Navegadores bloqueiam som automático)
+        function liberarSom() {
+            const btn = document.getElementById('ativar-som');
+            const som = document.getElementById('som-pedido');
+            som.play().then(() => {
+                som.pause();
+                som.currentTime = 0;
+                btn.style.background = "#4caf50";
+                btn.innerHTML = '<i class="fas fa-volume-up"></i> Som Ativado';
+            });
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIGURAÇÃO CORRIGIDA PARA FB-PEDIDOS
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIcG9NqxQ7PLUB9Qu45FUWwvD1K7of-2s",
+            authDomain: "fb-pedidos.firebaseapp.com",
+            projectId: "fb-pedidos",
+            storageBucket: "fb-pedidos.appspot.com",
+            messagingSenderId: "702648413709",
+            appId: "1:702648413709:web:ce059405977b5e628bef44"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        console.log("✅ Cozinha conectada ao projeto fb-pedidos");
+    </script>
+
+    <script type="module" src="cozinha.js"></script>
+
+</body>
+
+</html>

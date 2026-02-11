@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Entregador - F&B Burguer</title>
+    <style>
+        /* FUNDO DA PÁGINA */
+        body {
+            background-color: #121212 !important;
+            /* Tentamos o dark */
+            color: #ffffff !important;
+            /* Texto PRETO por padrão para ler no branco */
+            font-family: sans-serif;
+            padding: 10px;
+        }
+
+        /* O CARD DE ENTREGA */
+        .card-entrega {
+            background-color: #f8f9fa !important;
+            /* Fundo cinza clarinho (quase branco) */
+            border: 3px solid #000000 !important;
+            /* Borda PRETA grossa */
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #000000 !important;
+            /* Texto interno PRETO */
+        }
+
+        /* A ÁREA QUE ESTAVA "CEGA" (Total e Pagamento) */
+        .info-valor {
+            background-color: #ffffff !important;
+            /* Fundo Branco */
+            border: 2px solid #ff9800 !important;
+            /* Borda Laranja */
+            padding: 10px;
+            margin: 10px 0;
+            color: #000000 !important;
+            /* TEXTO PRETO PARA ENXERGAR */
+        }
+
+        /* FORÇANDO CORES NOS TEXTOS INTERNOS */
+        .info-valor p,
+        .info-valor strong,
+        .card-entrega p,
+        .card-entrega h3 {
+            color: #000000 !important;
+            /* TUDO PRETO */
+            display: block;
+            font-weight: bold !important;
+        }
+
+        /* DESTAQUE PARA O TOTAL */
+        .info-valor strong {
+            font-size: 1.4rem !important;
+            color: #d32f2f !important;
+            /* Vermelho escuro para o preço */
+        }
+
+        /* BOTÕES (Mantemos as cores fortes) */
+        .btn-rota {
+            background-color: #1a73e8 !important;
+            color: white !important;
+            display: block;
+            padding: 15px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .btn-concluir {
+            background-color: #2e7d32 !important;
+            color: white !important;
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+
+        }
+
+        .title {
+            background-color: #ff9800 !important;
+            color: black !important;
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1 class="title">📦 ENTREGAS PENDENTES</h1>
+    </header>
+
+    <main id="lista-entregas">
+        <div class="sem-pedidos">Carregando entregas...</div>
+    </main>
+
+    <script type="module" src="entregador.js"></script>
+</body>
+
+</html>
