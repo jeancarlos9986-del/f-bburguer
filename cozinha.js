@@ -128,7 +128,7 @@ function obterEtiquetaTipo(tipo) {
         'balcao': { texto: 'RETIRADA', icone: 'fa-shopping-bag', cor: '#2196f3' }
     };
     const config = tipos[chave] || { texto: 'NÃO DEFINIDO', icone: 'fa-question', cor: '#777' };
-    return `<span class="tipo-destaque" style="background: ${config.cor}; color: white; padding: 6px 14px; border-radius: 50px; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;"><i class="fas ${config.icone}"></i> ${config.texto}</span>`;
+    return `<span class="tipo-destaque" style="background: ${config.cor}; color: white; padding: 6px 14px; border-radius: 50px; font-size: 25px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;"><i class="fas ${config.icone}"></i> ${config.texto}</span>`;
 }
 
 // ==========================================
@@ -308,4 +308,5 @@ async function marcarComoPronto(idPedido) {
         status: "Pronto",
         timestamp_pronto: Date.now() // 🚀 Registra o momento exato da conclusão
     });
+
 }
