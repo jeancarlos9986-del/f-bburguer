@@ -64,7 +64,7 @@ const PRECOS = {
     refrigerantes: {
         "Coca Cola 2L": 12.00, "Coca Cola Zero 2L": 12.00, "Fanta Laranja 2L": 12.00,
         "Coca cola Lata 310ml": 5.00, "Coca cola zero Lata 310ml": 5.00,
-        "Mineiro 1,5L": 7.50, "Mineiro Lata": 5.00, "Amstel": 6.00, "Coca 600ml": 7.00, "Coca Cola 1L": 8.50, "Coca Zero 1L": 8.50, "Kuat": 10.00,
+         "Mineiro Lata": 5.00,"Fanta Laranja Lata": 5.00,"Fanta Uva Lata": 5.00, "Amstel": 6.00, "Coca 600ml": 7.00,"Mineiro 1,5L": 7.50,  "Coca Cola 1L": 8.50, "Coca Zero 1L": 8.50, "Kuat": 10.00,
         "Agua Mineral": 4.00, "Agua C/Gas": 4.00, "Brahma": 5.00, "Skol": 5.00, "Antartica": 5.00, "Dell Vale Maracuja": 10,
         "Dell Vale Pessego": 10,
         "Dell Vale Abacaxi": 10,
@@ -3460,4 +3460,5 @@ document.addEventListener("DOMContentLoaded", () => {
         iniciarGerenciamento();
     }
 });
+
 aplicarBloqueioEstoque();
