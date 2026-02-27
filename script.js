@@ -68,7 +68,7 @@ const PRECOS = {
         "Agua Mineral": 4.00, "Agua C/Gas": 4.00, "Brahma": 5.00, "Skol": 5.00, "Antartica": 5.00, "Dell Vale Maracuja": 10,
         "Dell Vale Pessego": 10,
         "Dell Vale Abacaxi": 10,
-        "Dell Vale Manga": 10, "Heineken": 9.00
+        "Dell Vale Manga": 10, "Heineken": 9.00, "Monster Energy": 13.00
     },
     acai: {
         "Açaí 400ml": 17.00,
@@ -3049,7 +3049,7 @@ ${itensLista}${textoObs}
 *Total: R$ ${pedido.total.toFixed(2)}*
 ${infoPagamento}
 
-*Você aceita barbecure e mostarda para acompanhar seu lanche?*
+*Você aceita barbecure, molho de alho, molho verde e mostarda para acompanhar seu lanche?*
 *Previsão:* 20 a 40 min.
 *Agradecemos a preferência! 🍟*
 ---------------------------------------`.trim();
@@ -3462,3 +3462,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 aplicarBloqueioEstoque();
+
