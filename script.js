@@ -47,7 +47,7 @@ const CHAVE_PIX = "704.131.246-14";
 const PRECOS = {
     jantinha: 18.00,
     espetos: {
-        "Fraldinha": 10.00, "Almôdega C/Bacon": 10.00, "Fran Bacon": 10.00,
+        "Fraldinha": 10.00, "Almôdega Com Bacon": 10.00, "Fran Bacon": 10.00,
         "Costela Bovina": 10.00, "Linguiça Apimentada": 10.00,
         "Kafta com Queijo": 10.00, "Linguiça Toscana": 10.00,
         "Tulipa": 10.00, "Cupim Laranja": 12.00, "Costela Suina": 10.00,
@@ -97,7 +97,7 @@ const PRECOS = {
 const CUSTOS = {
     jantinha: 5.90,
     espetos: {
-        "Fraldinha": 5.60, "Almôdega C/Bacon": 7.50, "Fran Bacon": 6.60,
+        "Fraldinha": 5.60, "Almôdega Com Bacon": 7.50, "Fran Bacon": 6.60,
         "Costela Bovina": 5.70, "Linguiça Apimentada": 6.70,
         "Kafta com Queijo": 6.10, "Linguiça Toscana": 3.60,
         "Tulipa": 5.60, "Costela Suina": 4.40, "Filé Mignon": 11.60,
@@ -153,56 +153,71 @@ const FICHA_TECNICA = {
     "Cheesebacon Simples": {
         pao: 1,
         hamburguer: 1,
-        queijo: 1,
+        cheddar: 1,
         bacon: 1
     },
     "Cheesebacon Duplo": {
         pao: 1,
         hamburguer: 2,
-        queijo: 2,
+        cheddar: 2,
         bacon: 2
     },
     "Tropical Simples": {
         pao: 1,
         hamburguer: 1,
-        queijo: 1,
+        mussarela: 1,
         bacon: 1,
+        alface: 1,
+        cebola: 1,
         abacaxi: 1
     },
     "Tropical Duplo": {
         pao: 1,
         hamburguer: 2,
-        queijo: 2,
+        mussarela: 2,
         bacon: 2,
+        alface: 1,
+        cebola: 2,
         abacaxi: 1
     },
     "BIG F&B Simples": {
         pao: 1,
         hamburguer: 1,
-        queijo: 1
+        cebola: 1,
+        alface: 1,
+        picles: 1,
+        cheddar: 1
     },
     "BIG F&B Duplo": {
         pao: 1,
         hamburguer: 2,
-        queijo: 2
+        cebola: 2,
+        picles: 1,
+        cheddar: 2
     },
     "F&B Banana Simples": {
         pao: 1,
         hamburguer: 1,
-        queijo: 1,
+        mussarela: 1,
+        bacon: 1,
+        alface: 1,
         banana: 1
     },
     "F&B Banana Duplo": {
         pao: 1,
         hamburguer: 2,
-        queijo: 2,
+        mussarela: 2,
+        bacon: 2,
+        alface: 1,
         banana: 1
     },
     "F&B Mania": {
         pao: 1,
         hamburguer: 3,
         queijo: 3,
-        bacon: 3
+        alface: 1,
+        anel: 2,
+        cheddar: 3
     },
     "Batata Frita P": {
         batata: 1
@@ -3462,4 +3477,5 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 aplicarBloqueioEstoque();
+
 
