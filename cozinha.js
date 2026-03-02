@@ -90,13 +90,11 @@ async function finalizarPedido(id) {
 
     let campoPronto = pracaAtual === 'lanches' ? 'prontoLanche' : 'prontoEspeto';
 
-    // 1. Preparamos a atualização da PRAÇA ATUAL
     let updateData = {
         [campoPronto]: true,
         [`tempo_preparo_${pracaAtual}`]: Math.floor((Date.now() - dados.timestamp) / 60000)
     };
 
-    // 2. CHECAGEM CRÍTICA: A outra praça já terminou ou sequer existe?
     const temOutraPraca = pracaAtual === 'lanches'
         ? (Object.values(dados.espetos || {}).some(q => q > 0) || !!dados.jantinhas?.quantidade)
         : (Object.values(dados.lanches || {}).some(q => q > 0));
@@ -105,12 +103,10 @@ async function finalizarPedido(id) {
         ? (dados.prontoEspeto === true)
         : (dados.prontoLanche === true);
 
-    // 3. Só encerra o pedido TOTAL se não houver outra praça ou se ela já terminou
     if (!temOutraPraca || outraPracaJaTaPronta) {
         updateData.status = "Pronto";
-        updateData.timestamp_pronto = Date.now(); // <--- ADICIONE ESTA LINHA
+        updateData.timestamp_pronto = Date.now();
     } else {
-        // Caso contrário, mantém Pendente para a outra cozinha continuar vendo
         updateData.status = "Pendente";
     }
 
@@ -135,25 +131,22 @@ function obterEtiquetaTipo(tipo) {
 // 7️⃣ ESCUTA EM TEMPO REAL
 // ==========================================
 const q = query(collection(db, "pedidos"), orderBy("timestamp", "asc"));
+
 onSnapshot(q, (snapshot) => {
     if (!lista) return;
     lista.innerHTML = "";
     const pedidosFiltrados = [];
     let novoPedidoDetectado = false;
-
-    console.log("CyberTech: Snapshot recebido. Pedidos no banco:", snapshot.size);
+    let fraseParaAnunciar = "";
+    let tipoEntregaParaAnunciar = ""; // Variável para guardar o tipo de entrega
 
     snapshot.forEach(docSnap => {
+        // docSnap é o documento correto para usar .data()
         const p = { id_db: docSnap.id, ...docSnap.data() };
 
-        // --- VALIDAÇÃO DE HORÁRIO (A TRAVA) ---
-        const agendado = p.horarioAgendado;
-        if (!deveAparecerAgora(agendado)) {
-            console.log(`Pedido de ${p.cliente} ocultado (Agendado para ${agendado})`);
-            return; // Pula a renderização deste pedido
-        }
+        const agendado = p.horarioAgendado || p.horario_agendado;
+        if (!deveAparecerAgora(agendado)) return;
 
-        // --- LÓGICA DE PRAÇAS (LANCHES/ESPETOS) ---
         const dadosLanches = p.cozinha || p.lanches || p.lanche || {};
         const dadosEspetos = p.churrasqueira || p.espetos || p.espeto || {};
 
@@ -161,7 +154,6 @@ onSnapshot(q, (snapshot) => {
         const temChurrasco = Array.isArray(dadosEspetos) ? dadosEspetos.length > 0 : Object.values(dadosEspetos).some(q => q > 0) || (p.jantinhas?.quantidade > 0);
 
         let mostrar = false;
-
         if (pracaAtual === 'lanches' || pracaAtual === 'cozinha') {
             if (temLanche && !p.prontoLanche) mostrar = true;
         } else if (pracaAtual === 'espetos' || pracaAtual === 'churrasqueira') {
@@ -170,21 +162,60 @@ onSnapshot(q, (snapshot) => {
             if (p.status !== "Pronto") mostrar = true;
         }
 
-        // --- FILTRO DE STATUS ---
         if (["Pendente", "Em preparo", "Preparando"].includes(p.status) && mostrar) {
             renderizarPedido(docSnap.id, p);
             pedidosFiltrados.push(p);
 
+            // Verifica se é um pedido novo para disparar o som e a voz
             if (!pedidosCarregados.has(docSnap.id)) {
                 pedidosCarregados.add(docSnap.id);
                 novoPedidoDetectado = true;
+
+                // Captura o tipo de entrega diretamente do objeto 'p' que já tem os dados
+                tipoEntregaParaAnunciar = p.tipo_local || p.tipo_entrega || "Não informado";
+
+                let nomeCliente = p.cliente || p.cliente_nome || "Novo Cliente";
+                fraseParaAnunciar = `Novo pedido... de: ${nomeCliente}. . . `;
+
+                const itensParaFalar = (pracaAtual === 'lanches' || pracaAtual === 'cozinha') ? dadosLanches : dadosEspetos;
+
+                let arrayItens = Object.entries(itensParaFalar)
+                    .filter(([_, qtd]) => qtd > 0)
+                    .map(([nome, qtd]) => {
+                        let nomeAjustado = nome.toLowerCase()
+                            .replace(/linguiça/g, "lin-gui-ça")
+                            .replace(/x-/g, "xis ")
+                            .replace(/jantinha/g, "jan-ti-nha");
+
+                        return `${qtd} ${nomeAjustado}`;
+                    });
+
+                if ((pracaAtual === 'espetos' || pracaAtual === 'churrasqueira') && p.jantinhas?.quantidade > 0) {
+                    arrayItens.push(`${p.jantinhas.quantidade} jan-ti-nha`);
+                }
+
+                const listaFinal = arrayItens.join(". . ");
+                if (listaFinal) fraseParaAnunciar += `Preparar: . . ${listaFinal}. . `;
+
+                if (p.observacoes || p.obs) {
+                    fraseParaAnunciar += ` . . Atenção à observação! . . ${p.observacoes || p.obs}`;
+                }
             }
         }
     });
 
-    if (novoPedidoDetectado && somLiberado && audio) {
-        audio.play().catch(e => console.log("Som bloqueado"));
+    if (novoPedidoDetectado && somLiberado) {
+        if (audio) audio.play().catch(e => console.log("Som bloqueado"));
+
+        // Se a praça não for lanches, anuncia o tipo de entrega e os itens
+        if (pracaAtual !== 'lanches' && pracaAtual !== 'cozinha') {
+            setTimeout(() => {
+                // Agora usamos a variável tipoEntregaParaAnunciar que capturamos dentro do loop
+                anunciarPedidoVoz(fraseParaAnunciar, tipoEntregaParaAnunciar);
+            }, 1200);
+        }
     }
+
     atualizarResumoProducao(pedidosFiltrados);
 });
 
@@ -201,16 +232,11 @@ function renderizarPedido(id, p) {
     div.className = `pedido-card status-${p.status.replace(" ", "-")}`;
 
     let itensHTML = "";
-
-    // Estilos Inline para garantir contraste
     const estiloNovo = `background-color: #fff3cd !important; color: #856404 !important; border-left: 5px solid #ffc107; padding: 10px; margin: 5px 0; border-radius: 4px; display: block; font-weight: bold; list-style: none;`;
     const estiloNormal = `color: #ffffff; padding: 5px 0; border-bottom: 1px dashed #444; list-style: none; display: block;`;
 
-    // --- 🍢 ESPETOS ---
     if (pracaAtual === 'espetos' || !pracaAtual) {
         const jaFeitos = p.entreguesEspetos || {};
-
-        // Jantinhas
         const totalJ = p.jantinhas?.quantidade || 0;
         const feitoJ = jaFeitos.jantinhas || 0;
         const saldoJ = totalJ - feitoJ;
@@ -218,7 +244,6 @@ function renderizarPedido(id, p) {
             itensHTML += `<li style="${feitoJ > 0 ? estiloNovo : estiloNormal}"><i class="fas fa-utensil-spoon"></i> ${saldoJ}x Jantinha ${feitoJ > 0 ? '<span style="color: #000; font-size: 10px; background: #ffc107; padding: 2px 4px; border-radius: 3px; margin-left: 5px;">🆕 NOVO</span>' : ''}</li>`;
         }
 
-        // Espetos (plural ou singular)
         Object.entries(p.espetos || p.espeto || {}).forEach(([nome, qtdTotal]) => {
             const qtdFeita = jaFeitos[nome] || 0;
             const saldo = qtdTotal - qtdFeita;
@@ -228,7 +253,6 @@ function renderizarPedido(id, p) {
         });
     }
 
-    // --- 🍔 LANCHES ---
     if (pracaAtual === 'lanches' || !pracaAtual) {
         const jaFeitosL = p.entreguesLanches || {};
         Object.entries(p.lanches || p.lanche || {}).forEach(([nome, qtdTotal]) => {
@@ -278,35 +302,79 @@ function atualizarResumoProducao(pedidos) {
     });
     resumo.innerHTML = Object.entries(totais).map(([n, q]) => `<div class="resumo-tag"><strong>${q}x</strong> ${n}</div>`).join("");
 }
-// Faz as funções ficarem visíveis para os botões do HTML
+
 window.finalizarPedido = finalizarPedido;
-if (typeof iniciarPedido !== 'undefined') {
-    window.iniciarPedido = iniciarPedido;
-}
+window.iniciarPedido = iniciarPedido;
+
 function deveAparecerAgora(horarioAgendado) {
-    console.log("DEBUG: Recebi o horário:", horarioAgendado); // Isso TEM que aparecer no F12
-
-    if (!horarioAgendado || horarioAgendado === "Imediato") {
-        console.log("DEBUG: É imediato, liberando...");
-        return true;
-    }
-
+    if (!horarioAgendado || horarioAgendado === "Imediato") return true;
     const agora = new Date();
     const [h, m] = horarioAgendado.split(':');
     const horarioPedido = new Date();
     horarioPedido.setHours(parseInt(h), parseInt(m), 0);
-
     const diferenca = (horarioPedido - agora) / 1000 / 60;
-    console.log("DEBUG: Minutos para o pedido:", Math.round(diferenca));
-
     return diferenca <= 30;
 }
-// Exemplo de como deve ficar a função de concluir o pedido
+
 async function marcarComoPronto(idPedido) {
     const docRef = doc(db, "pedidos", idPedido);
     await updateDoc(docRef, {
         status: "Pronto",
-        timestamp_pronto: Date.now() // 🚀 Registra o momento exato da conclusão
+        timestamp_pronto: Date.now()
     });
+}
 
+function anunciarPedidoVoz(texto, tipoLocal) {
+    if ('speechSynthesis' in window && somLiberado) {
+        window.speechSynthesis.cancel();
+
+        setTimeout(() => {
+            // 1. PREPARAÇÃO DO ANÚNCIO DE ENTREGA
+            let anuncioTipo = "";
+            const local = (tipoLocal || "").toLowerCase();
+
+            if (local.includes("entrega")) {
+                anuncioTipo = "Atenção, pedido para entrega. ";
+            } else if (local.includes("retirada")) {
+                anuncioTipo = "Atenção, cliente vai retirar no balcão. ";
+            } else if (local.includes("local") || local.includes("comer")) {
+                anuncioTipo = "Atenção, pedido para comer no local. ";
+            }
+
+            // 2. TRATAMENTO FONÉTICO (ITENS)
+            let textoFonetico = texto
+                // Mata o erro do "Janeiro": troca "3x" por "3 unidades de"
+                .replace(/(\d+)x\s+/gi, "$1 unidades de ")
+                .replace(/(\d+)x/gi, "$1 unidades de ")
+
+                // Correção Jantinha
+                .replace(/jantinha/gi, "jan-tínha")
+
+                // Correção Linguiça Toscana
+                .replace(/Linguiça Toscana/gi, "Lingüiça Toscâna")
+                .replace(/linguiça/gi, "lingüiça")
+                .replace(/toscana/gi, "toscâna")
+
+                .replace(/-/g, " ");
+
+            // Montagem da frase: Tipo de Entrega + Itens
+            const mensagemFinal = anuncioTipo + textoFonetico;
+
+            const mensagem = new SpeechSynthesisUtterance(mensagemFinal);
+
+            // Busca vozes de melhor qualidade
+            const vozes = window.speechSynthesis.getVoices();
+            const vozMelhor = vozes.find(v => v.name.includes('Google') && v.lang === 'pt-BR') ||
+                vozes.find(v => v.lang === 'pt-BR');
+
+            if (vozMelhor) mensagem.voice = vozMelhor;
+
+            mensagem.lang = 'pt-BR';
+            mensagem.rate = 0.83; // Velocidade ideal para clareza
+            mensagem.pitch = 1.0;
+            mensagem.volume = 1.0;
+
+            window.speechSynthesis.speak(mensagem);
+        }, 200);
+    }
 }
